@@ -16,22 +16,31 @@ WG_PORT="${WG_PORT:-51820}"
 WG_ALLOWED_IPS="${WG_ALLOWED_IPS:-0.0.0.0/0}"
 WG_PERSISTENT_KEEPALIVE="${WG_PERSISTENT_KEEPALIVE:-25}"
 
-# Get the client's public key
+# Check if client already exists
 PUBLIC_KEY_FILE="${KEYS_DIR}/${CLIENT_NAME}_public.key"
 if [ -f "$PUBLIC_KEY_FILE" ]; then
     echo "Error: Client $CLIENT_NAME already exists"
     exit 1
 fi
 
-# Generate client keys
-echo "================================================"
-echo "Generating keys for client: $CLIENT_NAME"
-umask 077
-wg genkey | tee "${KEYS_DIR}/${CLIENT_NAME}_private.key" | wg pubkey > "${KEYS_DIR}/${CLIENT_NAME}_public.key"
+# Get all used IPs from Peer sections
+USED_IPS=$(grep "AllowedIPs" "${WG_CONF}" | grep -oE '10\.8\.0\.[0-9]+' | cut -d'.' -f4 | sort -n)
 
-# Get the next available IP
-LAST_IP=$(grep "Address" "${WG_CONF}" | tail -1 | awk '{print $3}' | cut -d'.' -f4 | cut -d'/' -f1 2>/dev/null || echo "1")
-NEXT_IP=$((LAST_IP + 1))
+# Find the next available IP
+NEXT_IP=2
+if [ -n "$USED_IPS" ]; then
+    # Start from the highest used IP + 1
+    HIGHEST_IP=$(echo "$USED_IPS" | tail -1)
+    NEXT_IP=$((HIGHEST_IP + 1))
+    
+    # If we've skipped some IPs (due to deletions), find the first available gap
+    for ip in $(seq 2 253); do
+        if ! echo "$USED_IPS" | grep -q "^${ip}$"; then
+            NEXT_IP=$ip
+            break
+        fi
+    done
+fi
 
 if [ $NEXT_IP -ge 254 ]; then
     echo "======================================================="
@@ -41,6 +50,12 @@ if [ $NEXT_IP -ge 254 ]; then
 fi
 
 CLIENT_IP="10.8.0.${NEXT_IP}/32"
+
+# Generate client keys
+echo "================================================"
+echo "Generating keys for client: $CLIENT_NAME"
+umask 077
+wg genkey | tee "${KEYS_DIR}/${CLIENT_NAME}_private.key" | wg pubkey > "${KEYS_DIR}/${CLIENT_NAME}_public.key"
 
 # Add client to server configuration
 echo "Adding client to server configuration..."
