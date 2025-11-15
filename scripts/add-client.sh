@@ -16,10 +16,16 @@ WG_PORT="${WG_PORT:-51820}"
 WG_ALLOWED_IPS="${WG_ALLOWED_IPS:-0.0.0.0/0}"
 WG_PERSISTENT_KEEPALIVE="${WG_PERSISTENT_KEEPALIVE:-25}"
 
+# Get the client's public key
+PUBLIC_KEY_FILE="${KEYS_DIR}/${CLIENT_NAME}_public.key"
+if [ -f "$PUBLIC_KEY_FILE" ]; then
+    echo "Error: Client $CLIENT_NAME already exists"
+    exit 1
+fi
+
 # Generate client keys
-echo "============================================="
+echo "================================================"
 echo "Generating keys for client: $CLIENT_NAME"
-echo "============================================="
 umask 077
 wg genkey | tee "${KEYS_DIR}/${CLIENT_NAME}_private.key" | wg pubkey > "${KEYS_DIR}/${CLIENT_NAME}_public.key"
 
@@ -28,29 +34,25 @@ LAST_IP=$(grep "Address" "${WG_CONF}" | tail -1 | awk '{print $3}' | cut -d'.' -
 NEXT_IP=$((LAST_IP + 1))
 
 if [ $NEXT_IP -ge 254 ]; then
-    echo "============================================="
-    echo "Error: No more available IP addresses in the subnet"
-    echo "============================================="
+    echo "======================================================="
+    echo "  Error: No more available IP addresses in the subnet"
+    echo "======================================================="
     exit 1
 fi
 
 CLIENT_IP="10.8.0.${NEXT_IP}/32"
 
 # Add client to server configuration
-echo "============================================="
 echo "Adding client to server configuration..."
-echo "============================================="
 cat >> "${WG_CONF}" << EOF
 
-[Peer]
+[Peer] #$CLIENT_NAME
 PublicKey = $(cat "${KEYS_DIR}/${CLIENT_NAME}_public.key")
 AllowedIPs = ${CLIENT_IP}
 EOF
 
 # Create client configuration
-echo "============================================="
 echo "Creating client configuration..."
-echo "============================================="
 CLIENT_CONFIG="${CONFIGS_DIR}/${CLIENT_NAME}.conf"
 cat > "${CLIENT_CONFIG}" << EOF
 [Interface]
@@ -66,9 +68,7 @@ PersistentKeepalive = ${WG_PERSISTENT_KEEPALIVE}
 EOF
 
 # Reload WireGuard configuration
-echo "============================================="
 echo "Reloading WireGuard configuration..."
-echo "============================================="
 wg syncconf wg0 <(wg-quick strip wg0)
 
 echo "================================================"

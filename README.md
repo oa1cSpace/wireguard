@@ -1,6 +1,9 @@
-# Multi-Platform WireGuard VPN Server
+![alt text](https://www.wireguard.com/img/wireguard.svg)
+# Multi-Platform VPN Server
 
-A production-ready Dockerized WireGuard VPN server supporting both ```amd64``` and ```arm64``` architectures with simple user management.
+A production-ready Dockerized VPN server supporting both ```amd64``` and ```arm64``` architectures with simple user management.
+
+[WireGuard official website](https://www.wireguard.com/)
 
 ## Features
 
@@ -14,7 +17,7 @@ A production-ready Dockerized WireGuard VPN server supporting both ```amd64``` a
 
 ## Quick Start
 
-### Prerequisites
+### Prerequisites:
 
 - Docker and Docker Compose
 - A server with a public IP address
@@ -39,12 +42,12 @@ nano .env
 
 3. **Build and start:**
 ```bash
-docker-compose -f wireguard-compose.yml up -d --build
+docker compose -f wireguard-compose.yml up -d --build
 ```
 
-**Or just set ```image: soer42/wireguard:latest``` in compose file instead of ```build```, and run:**
+or just use lates image ```image: soer42/wireguard:latest```, and run:
 ```bash
-docker-compose -f wireguard-compose.yml up -d
+docker compose -f wireguard-compose.yml up -d
 ```
 
 4. **Add your first client:**
@@ -301,36 +304,6 @@ docker buildx build --platform linux/amd64,linux/arm64 -t your-registry/wireguar
 docker buildx build --platform linux/amd64,linux/arm64 -t your-registry/wireguard:latest . --push
 ```
 
-## Complete Setup Example
-
-Here's a complete example from scratch:
-
-```bash
-# 1. Create project directory
-mkdir wireguard && cd wireguard
-
-# 2. Create directory structure
-mkdir -p scripts data/{wireguard,keys,configs}
-
-# 3. Download all the files (Dockerfile, compose, scripts, etc.)
-
-# 4. Set permissions
-chmod +x scripts/*.sh
-
-# 5. Configure environment
-echo "WG_HOST=your-server.com" > .env
-echo "WG_PORT=51820" >> .env
-
-# 6. Build and start
-docker compose -f wireguard-compose.yml up -d --build
-
-# 7. Add first client
-docker exec -it wireguard add-client.sh my-device
-
-# 8. Check status
-docker exec -it wireguard list-clients.sh
-```
-
 ## Monitoring and Maintenance
 
 ### Regular Maintenance Tasks
@@ -347,16 +320,6 @@ docker exec -it wireguard list-clients.sh
 3. **Remove inactive clients:**
 ```bash
 docker exec -it wireguard remove-client.sh old-client
-```
-
-### Monitoring Script
-Create a simple monitoring script `check-vpn.sh`:
-```bash
-#!/bin/bash
-echo "=== WireGuard Status ==="
-docker exec wireguard wg show
-echo -e "\n=== Connected Clients ==="
-docker exec wireguard list-clients.sh
 ```
 
 ## License

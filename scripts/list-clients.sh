@@ -17,7 +17,7 @@ wg show wg0 peers | while read peer; do
         echo ""
     fi
 done
-echo "============================================="
+echo "---------------------------------------------"
 
 echo "============================================="
 echo "Available client configurations:"
@@ -25,4 +25,4 @@ echo "============================================="
 ls -1 "${CONFIGS_DIR}"/*.conf 2>/dev/null | while read config; do
     echo "  $(basename "$config" .conf)"
 done
-echo "============================================="
+echo "---------------------------------------------"

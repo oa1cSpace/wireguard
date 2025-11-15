@@ -2,8 +2,8 @@
 
 services:
   wireguard:
-    #build: .
-    image: soer42/wireguard:latest
+    build: .
+    #image: soer42/wireguard:latest
     container_name: wireguard
     restart: unless-stopped
     cap_add:
