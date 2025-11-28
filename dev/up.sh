@@ -10,4 +10,4 @@ echo "'data/' dir is created."
 
 echo "Startinng container..."
 
-docker compose -f ../wireguard-compose.yml up -d
+docker compose -f ../wireguard-compose.yml up -d --build

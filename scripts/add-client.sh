@@ -15,6 +15,8 @@ WG_HOST="${WG_HOST:-your-server-domain.com}"
 WG_PORT="${WG_PORT:-51820}"
 WG_ALLOWED_IPS="${WG_ALLOWED_IPS:-0.0.0.0/0}"
 WG_PERSISTENT_KEEPALIVE="${WG_PERSISTENT_KEEPALIVE:-25}"
+CLIENT_DNS1="${CLIENT_DNS1}"
+CLIENT_DNS2="${CLIENT_DNS2}"
 
 # Check if client already exists
 PUBLIC_KEY_FILE="${KEYS_DIR}/${CLIENT_NAME}_public.key"
@@ -24,7 +26,9 @@ if [ -f "$PUBLIC_KEY_FILE" ]; then
 fi
 
 # Get all used IPs from Peer sections
-USED_IPS=$(grep "AllowedIPs" "${WG_CONF}" | grep -oE '10\.[0-9]+\.[0-9]+\.[0-9]+' | cut -d'.' -f4 | sort -n)
+SERVER_IP=$(grep "^Address" "${WG_CONF}" | head -n1 | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}')
+SUBNET=$(echo "$SERVER_IP" | cut -d'.' -f1-3)
+USED_IPS=$(grep "AllowedIPs" "${WG_CONF}" | grep -oE "${SUBNET}\.[0-9]+" | cut -d'.' -f4 | sort -n)
 
 # Find the next available IP
 NEXT_IP=2
@@ -49,7 +53,7 @@ if [ $NEXT_IP -ge 254 ]; then
     exit 1
 fi
 
-CLIENT_IP="10.8.0.${NEXT_IP}/32"
+CLIENT_IP="${SUBNET}.${NEXT_IP}/32"
 
 # Generate client keys
 echo "================================================"
@@ -73,7 +77,7 @@ cat > "${CLIENT_CONFIG}" << EOF
 [Interface]
 PrivateKey = $(cat "${KEYS_DIR}/${CLIENT_NAME}_private.key")
 Address = ${CLIENT_IP}
-DNS = 8.8.8.8, 1.1.1.1
+DNS = ${CLIENT_DNS1}${CLIENT_DNS2:+, ${CLIENT_DNS2}}
 
 [Peer]
 PublicKey = $(cat "${KEYS_DIR}/server_public.key")

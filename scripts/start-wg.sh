@@ -6,6 +6,8 @@ WG_DIR="/etc/wireguard"
 WG_CONF="${WG_DIR}/wg0.conf"
 KEYS_DIR="/wg/keys"
 CONFIGS_DIR="/wg/configs"
+WG_NETWORK="${WG_NETWORK}"
+WG_PORT="${WG_PORT}"
 
 # Generate server keys if they don't exist
 if [ ! -f "${KEYS_DIR}/server_private.key" ]; then
@@ -24,8 +26,8 @@ if [ ! -f "${WG_CONF}" ]; then
     cat > "${WG_CONF}" << EOF
 [Interface]
 PrivateKey = $(cat "${KEYS_DIR}/server_private.key")
-Address = 10.8.0.1/24
-ListenPort = 51820
+Address = ${WG_NETWORK}
+ListenPort = ${WG_PORT}
 PostUp = iptables -A FORWARD -i %i -j ACCEPT; iptables -A FORWARD -o %i -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 PostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -D FORWARD -o %i -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
 
