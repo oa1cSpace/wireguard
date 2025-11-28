@@ -24,7 +24,7 @@ if [ -f "$PUBLIC_KEY_FILE" ]; then
 fi
 
 # Get all used IPs from Peer sections
-USED_IPS=$(grep "AllowedIPs" "${WG_CONF}" | grep -oE '10\.8\.0\.[0-9]+' | cut -d'.' -f4 | sort -n)
+USED_IPS=$(grep "AllowedIPs" "${WG_CONF}" | grep -oE '10\.[0-9]+\.[0-9]+\.[0-9]+' | cut -d'.' -f4 | sort -n)
 
 # Find the next available IP
 NEXT_IP=2
